@@ -413,6 +413,8 @@ class WP2Static_FilesHelper {
             $url_queue
         );
 
+        error_log('$url_queue: '. print_r($url_queue, true));
+
         $unique_urls = array_unique( $url_queue );
         sort( $unique_urls );
 

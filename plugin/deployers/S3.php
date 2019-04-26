@@ -131,8 +131,8 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
     public function test_s3() {
         try {
             $this->put_s3_object(
-                '.tmp_wp2static.txt',
-                'Test WP2Static connectivity',
+                'tmp_wp2static.txt',
+                'Test WP2Static connectivity... woo!',
                 'text/plain'
             );
 
@@ -176,6 +176,8 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
         // Sort it in ascending order
         ksort( $request_headers );
 
+        error_log('put_s3_object() $request_headers: '. print_r($request_headers, true));
+
         $canonical_headers = array();
 
         foreach ( $request_headers as $key => $value ) {
@@ -183,6 +185,7 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
         }
 
         $canonical_headers = implode( "\n", $canonical_headers );
+        error_log('put_s3_object() $canonical_headers: '. print_r($canonical_headers, true));
 
         $signed_headers = array();
 
@@ -191,6 +194,7 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
         }
 
         $signed_headers = implode( ';', $signed_headers );
+        error_log('put_s3_object() $signed_headers: '. print_r($signed_headers, true));
 
         $canonical_request = array();
         $canonical_request[] = 'PUT';
@@ -217,6 +221,7 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
         $string_to_sign = implode( "\n", $string_to_sign );
 
         // Signing key
+        error_log('put_s3_object() $this->settings[s3Secret]: '. $this->settings['s3Secret']);
         $k_secret = 'AWS4' . $this->settings['s3Secret'];
         $k_date = hash_hmac( 'sha256', $date, $k_secret, true );
         $k_region =
@@ -245,6 +250,7 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
         $url = 'http://' . $host_name . '/' . $content_title;
 
         $this->logAction( "S3 URL: {$url}" );
+        error_log("put_object() S3 URL: {$url}");
 
         $ch = curl_init( $url );
 
@@ -265,6 +271,12 @@ class WP2Static_S3 extends WP2Static_SitePublisher {
 
         $this->logAction( "API response code: {$http_code}" );
         $this->logAction( "API response body: {$output}" );
+        error_log('put_object() $http_code: '. $http_code);
+        error_log('put_object() $output: '. print_r($output, true));
+
+        if ($http_code == 403) {
+                error_log('$content: '. print_r($content, true));
+        }
 
         $this->checkForValidResponses(
             $http_code,
